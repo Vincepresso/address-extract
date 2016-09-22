@@ -2,7 +2,7 @@ package com.vinhuang.processors;
 
 // Import appropriate packages
 
-public class AddressExtract1099MProcessor implements ItemProcessor<Agent, AddressExtractMOutput> {
+public class AddressExtractProcessor implements ItemProcessor<Agent, AddressExtractMOutput> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AddressExtractProcessor.class);
 	private static final COUNTRY_USA = "USA";
