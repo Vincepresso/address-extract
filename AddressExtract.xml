@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:p="http://www.springframework.org/schema/p" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+	<import resource="..\springioc\utils-config.xml" />
+	<import resource="..\springioc\repository-data-source.xml" />
+	<import resource="..\springioc\dataaccess.xml" />
+	<import resource="..\springioc\spring-batch-config.xml" />
+
+	<job id="AddressExtract" incrementer="jobRunIdIncrementer" xmlns="http://www.springframework.org/schema/batch">
+		<step id="mainStep">
+			<!-- MultiThreading with 9 threads -->
+			<!-- Not needed for sample code, but I'd like to demonstrate its usage -->
+			<tasklet task-executor="taskExecutor" throttle-limit="9">
+				<chunk reader="reader" processor="processor" writer="writer" commit-interval="100" />
+			</tasklet>
+		</step>
+	</job>
+
+	<!-- Using SynchronizedJdbcCursorItemReader to support multi threading -->
+	<!-- Using parameterized data access to strengthen security -->
+	<bean id="reader" class="com.vinhuang.common.SynchronizedJdbcCursorItemReader" scope="step">
+		<property name="dataSource" ref="dataSource" />
+		<property name="sql">
+			<value>
+				<![CDATA[   	  
+					SELECT *
+					FROM agent
+					WHERE cycle_date = ?
+				]]>
+			</value>
+		</property>
+		<property name="preparedStatementSetter">
+			<bean class="org.springframework.batch.core.resource.ListPreparedStatementSetter">
+				<property name="parameters">
+					<list>
+						<value>#{jobExecutionContext['cycleDate']}</value>
+					</list>
+				</property>
+			</bean>
+		</property>
+		<property name="rowMapper">
+			<bean class="org.springframework.jdbc.core.BeanPropertyRowMapper" scope="step">
+				<property name="mappedClass" value="com.vinhuang.beans.Agent" />
+			</bean>
+		</property>
+	</bean>
+
+	<bean id="processor" class="com.vinhuang.processors.AddressExtractProcessor" scope="step">
+		<!-- Spring Data Injection injects cycleDate to the processor -->
+		<property name="cycleDate" value="#{jobExecutionContext['cycleDate']}" />
+	</bean>
+	
+	<!-- Using SynchronizedItemWriter to support multi threading -->
+	<bean id="writer" class="com.vinhuang.common.SynchronizedItemWriter" >
+		<property name="delegate" ref="addressExtractWriter"/> 
+	</bean>
+
+	<bean id="addressExtractWriter" class="org.springframework.batch.item.file.FlatFileItemWriter" scope="step">
+		<property name="resource" value="file:${dir}\AddressExtract.txt" />
+		<property name="shouldDeleteIfEmpty" value="true" />
+		<property name="lineAggregator">
+			<bean class="com.vinhuang.common.BeanWrapperLineAggregator">
+				<property name="fields">
+					<map>
+						<entry key="addressLine1" value="%-34.34s" />
+						<entry key="addressLine2" value="%-34.34s" />
+						<entry key="addressLine3" value="%-34.34s" />
+						<entry key="city" value="%-34.34s" />
+						<entry key="zip" value="%-34.34s" />
+					</map>
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+</beans>
