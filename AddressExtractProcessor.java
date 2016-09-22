@@ -47,17 +47,6 @@ public class AddressExtractProcessor implements ItemProcessor<Agent, AddressExtr
 		}
 		return output;
 	}
-
-	/**
-	 * This Data Access Object is used to run a SELECT query against the database
-	 * by using AgentKey as its input (translated to the WHERE clause in SQL)
-	 *
-	 * @param AgentKey agentKey
-	 * @return AddressExtractOutput output
-	*/
-	public void setAgentDataDao(AgentDataDao agentDataDao) {
-		this.agentTopicDao = agentTopicDao;
-	}
 	
 	public void setCycleDate(Date cycleDate) {
 		this.cycleDate = cycleDate;
