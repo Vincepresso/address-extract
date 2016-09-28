@@ -1,3 +1,7 @@
+For simplicity sake, I contain all files in the master folder.
+In the real world, folder structure would look like:
+MyProject/src/com/vinhuang/...
+
 Address Extract Sample Code Package contains 4 main components:
 AddressExtract.xml --> Spring configuration where the data injection, SQL connection, and Spring Batch structure take place
 AddressExtractProcessor.java --> Main processing java code
